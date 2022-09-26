@@ -1,0 +1,172 @@
+{
+	"name": "pl-bronze-to-silver",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy data bronze to silver",
+				"description": "move data from bronze to silver",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "DelimitedTextSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						},
+						"formatSettings": {
+							"type": "DelimitedTextReadSettings"
+						}
+					},
+					"sink": {
+						"type": "ParquetSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "ParquetWriteSettings"
+						}
+					},
+					"enableStaging": false,
+					"translator": {
+						"type": "TabularTranslator",
+						"mappings": [
+							{
+								"source": {
+									"name": "order_id",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "customer_id",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "customer_id",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "order_status",
+									"type": "String",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_status",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "order_purchase_timestamp",
+									"type": "DateTime",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_purchase_timestamp",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "order_approved_at",
+									"type": "DateTime",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_approved_at",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "order_delivered_carrier_date",
+									"type": "DateTime",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_delivered_carrier_date",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "order_delivered_customer_date",
+									"type": "DateTime",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_delivered_customer_date",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							},
+							{
+								"source": {
+									"name": "order_estimated_delivery_date",
+									"type": "DateTime",
+									"physicalType": "String"
+								},
+								"sink": {
+									"name": "order_estimated_delivery_date",
+									"type": "String",
+									"physicalType": "UTF8"
+								}
+							}
+						],
+						"typeConversion": true,
+						"typeConversionSettings": {
+							"allowDataTruncation": true,
+							"treatBooleanAsNumber": false
+						}
+					}
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_orders",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "bronze",
+							"filename": "olist_orders_dataset.csv"
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_order_silver",
+						"type": "DatasetReference",
+						"parameters": {
+							"container": "silver"
+						}
+					}
+				]
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2022-09-26T22:44:10Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

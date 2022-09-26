@@ -1,0 +1,9 @@
+{
+	"name": "Factory-Learn-Data-DBC",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "336922bc-6b49-411a-9ac0-a0d278a646d0",
+		"tenantId": "72c9ec25-dea5-481c-b253-6070d9038d64"
+	}
+}
