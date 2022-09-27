@@ -16,7 +16,7 @@
 			"recurrence": {
 				"frequency": "Day",
 				"interval": 1,
-				"startTime": "2022-09-27T12:09:00",
+				"startTime": "2022-09-27T12:17:00",
 				"timeZone": "E. South America Standard Time",
 				"schedule": {
 					"minutes": [
