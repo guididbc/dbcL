@@ -5,10 +5,10 @@
 		"factoryName": {
 			"value": "Factory-Learn-Data-DBC"
 		},
-		"lkadls_accountKey": {
+		"lk_datalake_accountKey": {
 			"value": ""
 		},
-		"lkadls_properties_typeProperties_url": {
+		"lk_datalake_properties_typeProperties_url": {
 			"value": "https://adlslearningdbc.dfs.core.windows.net/"
 		},
 		"containerUri": {

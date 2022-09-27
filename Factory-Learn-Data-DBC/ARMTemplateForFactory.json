@@ -7,11 +7,11 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "Factory-Learn-Data-DBC"
 		},
-		"lkadls_accountKey": {
+		"lk_datalake_accountKey": {
 			"type": "secureString",
-			"metadata": "Secure string for 'accountKey' of 'lkadls'"
+			"metadata": "Secure string for 'accountKey' of 'lk_datalake'"
 		},
-		"lkadls_properties_typeProperties_url": {
+		"lk_datalake_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://adlslearningdbc.dfs.core.windows.net/"
 		}
@@ -21,15 +21,15 @@
 	},
 	"resources": [
 		{
-			"name": "[concat(parameters('factoryName'), '/pl-bronze-to-silver')]",
+			"name": "[concat(parameters('factoryName'), '/pl_csv')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"activities": [
 					{
-						"name": "Copy data bronze to silver",
-						"description": "move data from bronze to silver",
-						"type": "Copy",
+						"name": "Ler container",
+						"description": "Este pipeline é destinado a ler os arquivos do datalake que estção em csv",
+						"type": "GetMetadata",
 						"dependsOn": [],
 						"policy": {
 							"timeout": "0.12:00:00",
@@ -40,217 +40,170 @@
 						},
 						"userProperties": [],
 						"typeProperties": {
-							"source": {
-								"type": "DelimitedTextSource",
-								"storeSettings": {
-									"type": "AzureBlobFSReadSettings",
-									"recursive": true,
-									"enablePartitionDiscovery": false
-								},
-								"formatSettings": {
-									"type": "DelimitedTextReadSettings"
-								}
-							},
-							"sink": {
-								"type": "ParquetSink",
-								"storeSettings": {
-									"type": "AzureBlobFSWriteSettings"
-								},
-								"formatSettings": {
-									"type": "ParquetWriteSettings"
-								}
-							},
-							"enableStaging": false,
-							"translator": {
-								"type": "TabularTranslator",
-								"mappings": [
-									{
-										"source": {
-											"name": "order_id",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_id",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "customer_id",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "customer_id",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "order_status",
-											"type": "String",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_status",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "order_purchase_timestamp",
-											"type": "DateTime",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_purchase_timestamp",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "order_approved_at",
-											"type": "DateTime",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_approved_at",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "order_delivered_carrier_date",
-											"type": "DateTime",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_delivered_carrier_date",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "order_delivered_customer_date",
-											"type": "DateTime",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_delivered_customer_date",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									},
-									{
-										"source": {
-											"name": "order_estimated_delivery_date",
-											"type": "DateTime",
-											"physicalType": "String"
-										},
-										"sink": {
-											"name": "order_estimated_delivery_date",
-											"type": "String",
-											"physicalType": "UTF8"
-										}
-									}
-								],
-								"typeConversion": true,
-								"typeConversionSettings": {
-									"allowDataTruncation": true,
-									"treatBooleanAsNumber": false
-								}
-							}
-						},
-						"inputs": [
-							{
-								"referenceName": "ds_orders",
+							"dataset": {
+								"referenceName": "ds_csv",
 								"type": "DatasetReference",
 								"parameters": {
-									"container": "bronze",
-									"filename": "olist_orders_dataset.csv"
+									"container": "csvfiles",
+									"filename": "*.csv"
 								}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							},
+							"formatSettings": {
+								"type": "DelimitedTextReadSettings"
+							}
+						}
+					},
+					{
+						"name": "Filtro",
+						"description": "Filtra arquivos que não tenha o nome moviesDB.csv",
+						"type": "Filter",
+						"dependsOn": [
+							{
+								"activity": "Ler container",
+								"dependencyConditions": [
+									"Succeeded"
+								]
 							}
 						],
-						"outputs": [
-							{
-								"referenceName": "ds_order_silver",
-								"type": "DatasetReference",
-								"parameters": {
-									"container": "silver"
-								}
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Ler container').output.childItems",
+								"type": "Expression"
+							},
+							"condition": {
+								"value": "@not(equals(item().name,'moviesDB.csv'))",
+								"type": "Expression"
 							}
-						]
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Filtro",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Filtro').output.value",
+								"type": "Expression"
+							},
+							"isSequential": false,
+							"activities": [
+								{
+									"name": "Copy data",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "DelimitedTextSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"enablePartitionDiscovery": false
+											},
+											"formatSettings": {
+												"type": "DelimitedTextReadSettings"
+											}
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "ds_csv",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "csvfiles",
+												"filename": {
+													"value": "@item().name",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "ds_filesparquet",
+											"type": "DatasetReference",
+											"parameters": {
+												"container": "parquetfiles",
+												"filename": {
+													"value": "@replace(item().name,'.csv','.parquet')",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
+						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
 				},
-				"annotations": [],
-				"lastPublishTime": "2022-09-26T22:44:10Z"
+				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/ds_orders')]",
-				"[concat(variables('factoryId'), '/datasets/ds_order_silver')]"
+				"[concat(variables('factoryId'), '/datasets/ds_csv')]",
+				"[concat(variables('factoryId'), '/datasets/ds_filesparquet')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/ds_order_silver')]",
+			"name": "[concat(parameters('factoryName'), '/ds_csv')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"linkedServiceName": {
-					"referenceName": "lkadls",
+					"referenceName": "lk_datalake",
 					"type": "LinkedServiceReference"
 				},
 				"parameters": {
 					"container": {
-						"type": "string",
-						"defaultValue": "silver"
-					}
-				},
-				"annotations": [],
-				"type": "Parquet",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileSystem": {
-							"value": "@dataset().container",
-							"type": "Expression"
-						}
-					},
-					"compressionCodec": "snappy"
-				},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/lkadls')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ds_orders')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "lkadls",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"container": {
-						"type": "string",
-						"defaultValue": "bronze"
+						"type": "string"
 					},
 					"filename": {
-						"type": "string",
-						"defaultValue": "olist_orders_dataset.csv"
+						"type": "string"
 					}
 				},
 				"annotations": [],
@@ -269,60 +222,102 @@
 					},
 					"columnDelimiter": ",",
 					"escapeChar": "\\",
-					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
 				"schema": [
 					{
-						"name": "order_id",
-						"type": "String"
-					},
-					{
-						"name": "customer_id",
-						"type": "String"
-					},
-					{
-						"name": "order_status",
-						"type": "String"
-					},
-					{
-						"name": "order_purchase_timestamp",
-						"type": "String"
-					},
-					{
-						"name": "order_approved_at",
-						"type": "String"
-					},
-					{
-						"name": "order_delivered_carrier_date",
-						"type": "String"
-					},
-					{
-						"name": "order_delivered_customer_date",
-						"type": "String"
-					},
-					{
-						"name": "order_estimated_delivery_date",
 						"type": "String"
 					}
 				]
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/lkadls')]"
+				"[concat(variables('factoryId'), '/linkedServices/lk_datalake')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/lkadls')]",
+			"name": "[concat(parameters('factoryName'), '/ds_filesparquet')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "lk_datalake",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"container": {
+						"type": "string"
+					},
+					"filename": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().filename",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "order_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "customer_id",
+						"type": "UTF8"
+					},
+					{
+						"name": "order_status",
+						"type": "UTF8"
+					},
+					{
+						"name": "order_purchase_timestamp",
+						"type": "UTF8"
+					},
+					{
+						"name": "order_approved_at",
+						"type": "UTF8"
+					},
+					{
+						"name": "order_delivered_carrier_date",
+						"type": "UTF8"
+					},
+					{
+						"name": "order_delivered_customer_date",
+						"type": "UTF8"
+					},
+					{
+						"name": "order_estimated_delivery_date",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/lk_datalake')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lk_datalake')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
 			"properties": {
 				"annotations": [],
 				"type": "AzureBlobFS",
 				"typeProperties": {
-					"url": "[parameters('lkadls_properties_typeProperties_url')]",
+					"url": "[parameters('lk_datalake_properties_typeProperties_url')]",
 					"accountKey": {
 						"type": "SecureString",
-						"value": "[parameters('lkadls_accountKey')]"
+						"value": "[parameters('lk_datalake_accountKey')]"
 					}
 				}
 			},
