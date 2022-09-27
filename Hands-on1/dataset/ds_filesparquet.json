@@ -1,0 +1,67 @@
+{
+	"name": "ds_filesparquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "lk_datalake",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"container": {
+				"type": "string"
+			},
+			"filename": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().filename",
+					"type": "Expression"
+				},
+				"fileSystem": {
+					"value": "@dataset().container",
+					"type": "Expression"
+				}
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "order_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "customer_id",
+				"type": "UTF8"
+			},
+			{
+				"name": "order_status",
+				"type": "UTF8"
+			},
+			{
+				"name": "order_purchase_timestamp",
+				"type": "UTF8"
+			},
+			{
+				"name": "order_approved_at",
+				"type": "UTF8"
+			},
+			{
+				"name": "order_delivered_carrier_date",
+				"type": "UTF8"
+			},
+			{
+				"name": "order_delivered_customer_date",
+				"type": "UTF8"
+			},
+			{
+				"name": "order_estimated_delivery_date",
+				"type": "UTF8"
+			}
+		]
+	}
+}
